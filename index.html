@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Konzeptionelle Maßnahmenplanung – korrigierte Matrix</title>
+
+<style>
+/* -------------------------------------------------
+   Basislayout
+   ------------------------------------------------- */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 25px;
+    line-height: 1.45;
+}
+h1, h2 { margin-top: 1.5em; }
+fieldset { margin-bottom: 30px; padding: 18px; }
+legend { font-weight: bold; }
+
+label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+input[type="text"], textarea, select {
+    width: 100%;
+    max-width: 1150px;
+    padding: 6px;
+}
+textarea { min-height: 100px; }
+.hint {
+    font-size: .9em;
+    color: #555;
+    margin-top: 4px;
+}
+
+/* -------------------------------------------------
+   Tabelle in den Matrizen
+   ------------------------------------------------- */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 10px;
+    font-size: .9em;
+}
+th, td {
+    border: 1px solid #bbb;
+    padding: 4px;
+    text-align: center;
+}
+th { background:#f0f0f0; }
+td:first-child { text-align:left; }
+
+/* -------------------------------------------------
+   Ausklappbare Sektionen (details/summary)
+   ------------------------------------------------- */
+details {
+    margin-bottom: 20px;
+    border: 1px solid #bbb;
+    padding: 10px;
+    background:#fafafa;
+}
+summary {
+    font-weight: bold;
+    cursor:pointer;
+    outline:none;
+}
+
+/* -------------------------------------------------
+   Footer & Sonstiges
+   ------------------------------------------------- */
+.footer {
+    margin-top:45px;
+    font-size:.85em;
+    text-align:center;
+    color:#444;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Konzeptionelle Maßnahmenplanung</h1>
+<p>Entwicklungsvereinbarung lernförderlicher Schul‑IT</p>
+<p>Schulträger und Schule vereinbaren gemeinsam folgende technisch-pädagogische IT-Ausstattung:</p>
+
+<!-- =================================================
+     Grunddaten zum Schulträger
+     ================================================= -->
+<label for="Aktenzeichen">Aktenzeichen</label>
+<input type="text" id="Aktenzeichen" name="Aktenzeichen"
+       placeholder="[Az wird (automatisch) aus dem Fachverfahren übernommen]">
+
+<h2>I. Schulträger</h2>
+
+<label for="schultraeger_bezeichnung">Schulträger</label>
+<input type="text" id="schultraeger_bezeichnung" name="schultraeger_bezeichnung"
+       placeholder="Stadt Bonn (in diesem Beispiel 'fest verdrahtet', später sollen auch diese Daten [automatisch] aus dem Antragsverfahren übernommen werden)">
+
+<label for="schultraeger_nummer">Schulträgernummer:</label>
+<input type="text" id="schultraeger_nummer" name="schultraeger_nummer" placeholder="10170">
+
+<label for="schultraeger_anschrift">Schulträgeranschrift:</label>
+<input type="text" id="schultraeger_anschrift" name="schultraeger_anschrift"
+       placeholder="Sankt Augustiner Str. 86, 53225 Bonn">
+
+<label for="schultraeger_ansprechpartner">Ansprechpartner/in:</label>
+<input type="text" id="schultraeger_ansprechpartner" name="schultraeger_ansprechpartner"
+       placeholder="Herr Müller">
+
+<label for="schultraeger_telefon">Telefon:</label>
+<input type="text" id="schultraeger_telefon" name="schultraeger_telefon"
+       placeholder="0228 774‑0">
+
+<label for="schultraeger_email">E‑Mail:</label>
+<input type="email" id="schultraeger_email" name="schultraeger_email"
+       placeholder="schulamt@bonn.de">
+
+<hr>
+
+<!-- =================================================
+     Abschnitt II – Maßnahmen/Fördergegenstände
+     ================================================= -->
+<form>
+<fieldset>
+<legend>II. Maßnahmen/Fördergegenstände</legend>
+
+<div id="sections"></div>
+</fieldset>
+</form>
+
+<div class="footer">
+© Bezirksregierung Köln – Geschäftsstelle Gigabit 02/2026
+</div>
+
+<script>
+/* -------------------------------------------------
+   Datenbasis: Schulen und Abschnittstitel
+   ------------------------------------------------- */
+const schools = [
+    "Abendgymnasium u. Kolleg","Abendrealschule Weiterbildungskolleg","Adelheidisschule","Aloisiuskolleg",
+    "Am Domhof","Andreasschule","Anne-Frank-Schule","Arnold‑von‑Wied‑Schule","Astrid‑Lindgren‑Schule",
+    "Beethoven‑Gymnasium","Bergschule","Bischof‑Klaus‑Schule","Bonns Fünfte","Brueser Berg","Burgschule",
+    "Clemens‑August‑Schule","Derletalschule","Donatusschule","Ecole de Gaulle‑Adenauer",
+    "Elisabeth‑Selbert‑Gesamtschule","Freie Waldorfschule Bonn","Freiherr‑vom‑Stein‑Realschule",
+    "Friedrich‑Ebert‑Gymnasium","Gertrud‑Bäumer‑Realschule","Gottfried‑Kinkel‑Realschule",
+    "Hardtberg‑Gymnasium","Heiderhof","Helmholtz‑Gymnasium","Independent Bonn International School e.V.",
+    "Johannes‑Rau‑Schule","Kardinal‑Frings‑Gymnasium","Karl‑Simrock‑Schule für Berufsorientierung",
+    "Ludwig‑Erhard‑Berufskolleg","LVR‑Christophorusschule","Margot‑Barnard‑Realschule",
+    "Matthias‑Claudius‑Schule","Münsterschule","Nikolaus‑Cusanus‑Gymnasium","Paul‑Gerhardt‑Schule",
+    "Robert‑Koch‑Schule","St‑Hedwig","St‑Adelheid‑Gymnasium","Stiftsschule","Tannenbusch‑Gymnasium",
+    "Waldschule"
+];
+
+const sectionTitles = [
+    "II.I IT‑Grundstruktur – Digitale Vernetzung",
+    "II.II Anzeige‑ und Interaktionsgeräte",
+    "II.III Mobile Endgeräte für SuS",
+    "II.IV Mobile Endgeräte für LuL",
+    "II.V Digitale Arbeitsgeräte"
+];
+
+/* -------------------------------------------------
+   Build‑Matrix – exakt 5 Spalten
+   ------------------------------------------------- */
+function buildMatrix(sectionId, resultId) {
+    // Header (5 Spalten)
+    let html = `
+    <div class="matrix-toggle">
+        <button type="button" onclick="toggleMatrix('${sectionId}_matrix')">
+            Maßnahmenmatrix für Schulstandorte anzeigen ▼
+        </button>
+        <div id="${sectionId}_matrix" style="display:none;">
+        <table>
+            <tr>
+                <th>Schule / Bezeichnung</th>
+                <th>Absprache mit den betreffenden Schulen ist erfolgt</th>
+                <th>Lehrerqualifizierung gewährleistet</th>
+                <th>Wartung &amp; Support gewährleistet</th>
+                <th>Durch BR geprüft</th>
+            </tr>`;
+
+    // Zeilen: exakt 5 Zellen pro Zeile
+    const rows = schools.map(s => `
+            <tr>
+                <td>${s}</td>
+                <td><input type="checkbox" class="${sectionId}_pre"></td>
+                <td><input type="checkbox" class="${sectionId}_pre"></td>
+                <td><input type="checkbox" class="${sectionId}_req"></td>
+                <td><input type="checkbox" class="${sectionId}_req"></td>
+            </tr>`).join("");
+
+    html += rows + `
+        </table>
+        </div>
+    </div>`;
+    document.getElementById(sectionId).innerHTML += html;
+
+    // Listener – Ergebnis‑Textarea füllen
+    document.getElementById(sectionId).addEventListener('change', () => {
+        const rows = document.querySelectorAll(`#${sectionId} table tr`);
+        const selected = new Set();
+
+        rows.forEach((r, idx) => {
+            if (idx === 0) return; // Kopfzeile überspringen
+            const checks = r.querySelectorAll('input');
+            const brCheck = checks[4]; // letzte Spalte = „Durch BR geprüft“
+
+            // Aktivieren/Deaktivieren der BR‑Checkbox
+            if (checks[0].checked && checks[1].checked && checks[2].checked && checks[3].checked) {
+                brCheck.disabled = false;
+            } else {
+                brCheck.checked = false;
+                brCheck.disabled = true;
+            }
+
+            // Wenn irgendeine Checkbox gesetzt ist → Schulname merken
+            if ([...checks].some(c => c.checked)) {
+                selected.add(r.cells[0].innerText);
+            }
+        });
+
+        document.getElementById(resultId).value = [...selected].join(', ');
+    });
+}
+
+/* -------------------------------------------------
+   Toggle‑Funktion für die Matrix‑Anzeige
+   ------------------------------------------------- */
+function toggleMatrix(id){
+    const el = document.getElementById(id);
+    el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+}
+
+/* -------------------------------------------------
+   Aufbau der ausklappbaren Sektionen (details/summary)
+   ------------------------------------------------- */
+const container = document.getElementById('sections');
+
+sectionTitles.forEach((title, i) => {
+    const secId = `sec_${i}`;
+    const resultId = `res_${i}`;
+
+    // <details>‑Element
+    const detail = document.createElement('details');
+    detail.id = secId;
+
+    const summary = document.createElement('summary');
+    summary.textContent = title;
+    detail.appendChild(summary);
+
+    // Geräte‑Typ‑Auswahl (nur für III & IV)
+    if (i === 2 || i === 3) {
+        const devDiv = document.createElement('div');
+        devDiv.innerHTML = `
+            <label>Endgerätetyp:</label>
+            <div class="device-select">
+                <label><input type="checkbox" value="Notebook/Laptop" onchange="updateDevices(${i})"> Notebook/Laptop</label>
+                <label><input type="checkbox" value="Tablet-PC"      onchange="updateDevices(${i})"> Tablet-PC</label>
+                <label><input type="checkbox" value="Convertible"   onchange="updateDevices(${i})"> Convertible</label>
+            </div>
+            <textarea id="dev_res_${i}" readonly placeholder="Ausgewählte Endgerätetypen …"></textarea>`;
+        detail.appendChild(devDiv);
+    }
+
+    // Eingabefelder
+    let label2Text = '2. Maßnahmenbeschreibung/Benötigte Ausstattung';
+    if (i < 2) {
+        // Für IT-Grundstruktur und Anzeige-/Interaktionsgeräte: kein Zusatz
+    } else if (i === 4) {
+        // Für Digitale Arbeitsgeräte: pädagogische Begründung erforderlich (kursiv und unterstrichen)
+        label2Text += ' – <em><u>pädagogische Begründung erforderlich</u></em>';
+    } else {
+        // Für Mobile Endgeräte SuS und LuL: nicht erforderlich
+        label2Text += ' – pädagogische Begründung nicht erforderlich';
+    }
+    
+    const fieldsHTML = `
+        <label>1. Optionen – Angaben zur bestehenden Ausstattung</label>
+        <div class="hint">(Kann durch die Geschäfts­stelle ausgefüllt werden)</div>
+        <textarea></textarea>
+
+        <label>${label2Text}</label>
+        <textarea></textarea>
+
+        <div class="hint">
+            a) Planungen für Neubeschaffung / b) Wiederbeschaffung (bei Wiederbeschaffung bitte begründen) –
+            Die Planungen orientieren sich an funktionalen Beschreibungen
+        </div>
+
+        <label>Ausgewählte Maßnahmen an den folgenden Schulstandorten /
+               Wartung, Support und Lehrerqualifizierung gewährleistet /
+               Prüfergebnis</label>
+        <textarea id="${resultId}" readonly placeholder="Wird automatisch aus der Matrix gefüllt / Programmierhinweis: Inhalt wird auch in Abhängigkeit von den Auswahlergebnissen aus der Maßnahmenmatrix (siehe unten) generiert/die Tabellen mit den Schulen (in diesem Beispiel 'fest verdrahtet') sollen dann - in Abhängigkeit vom jeweiligen Antragsteller/Schulträger - durch Verlinkung zum Antrangsverfahren oder durch Datenimport generiert werden"></textarea>
+    `;
+    detail.insertAdjacentHTML('beforeend', fieldsHTML);
+
+    // Platzhalter‑Div für die Matrix (wird von buildMatrix befüllt)
+    const matrixDiv = document.createElement('div');
+    matrixDiv.id = secId;          // gleiche ID wie das <details>-Element – wird später überschrieben
+    detail.appendChild(matrixDiv);
+    container.appendChild(detail);
+
+    // Matrix erzeugen (nachdem das Element im DOM liegt)
+    buildMatrix(secId, resultId);
+});
+
+/* -------------------------------------------------
+   Device‑Auswahl‑Helper (nur für III & IV)
+   ------------------------------------------------- */
+function updateDevices(idx){
+    const checks = document.querySelectorAll(`details:nth-of-type(${idx+1}) input[type=checkbox][value]`);
+    const selected = [...checks].filter(c=>c.checked).map(c=>c.value);
+    document.getElementById(`dev_res_${idx}`).value = selected.join(', ');
+}
+</script>
+
+</body>
+</html>
